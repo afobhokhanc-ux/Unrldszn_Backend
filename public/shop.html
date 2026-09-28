@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — UNRLDSZN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="unrlszn.css" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <nav class="nav">
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <div class="nav-links">
+    <a href="shop.html">Shop</a>
+    <a href="index.html#collections">Collections</a>
+    <a href="#">About</a>
+  </div>
+  <a href="index.html" class="wordmark logo-link" aria-label="UNRLDSZN home">
+    <img src="logo.png" alt="UNRLDSZN" class="logo-img">
+  </a>
+  <div class="nav-right">
+
+    <div class="nav-icons">
+      <div class="search-wrap">
+        <input type="text" class="search-input" placeholder="Search..." aria-label="Search input">
+        <button class="icon-btn" id="searchBtn" aria-label="Search">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+
+      <button class="icon-btn" id="accountBtn" aria-label="Account">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+
+      <button class="icon-btn" aria-label="Cart">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count">2</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile nav menu (categories on shop page) -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<div class="mobile-nav-panel" id="mobileNavPanel">
+  <div class="account-panel-head">
+    <span class="eyebrow">Shop by Category</span>
+    <button class="panel-close" id="mobileNavClose" aria-label="Close menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="mobile-nav-links">
+    <a href="index.html">Home</a>
+    <button class="category-btn mobile-category-btn active" data-category="all">All</button>
+    <button class="category-btn mobile-category-btn" data-category="joggers">Joggers</button>
+    <button class="category-btn mobile-category-btn" data-category="tank-tops">Tank Tops</button>
+    <button class="category-btn mobile-category-btn" data-category="polo">Polo</button>
+    <button class="category-btn mobile-category-btn" data-category="long-sleeves">Long Sleeves</button>
+    <button class="category-btn mobile-category-btn" data-category="tees">Tees</button>
+  </nav>
+</div>
+  </header>
+
+  <div class="shop-header">
+    <span class="eyebrow">The Full Collection</span>
+    <h1>Shop All</h1>
+  </div>
+
+  <section class="shop">
+    <aside class="filters">
+      <button class="filter-toggle" aria-label="Toggle category filters">
+        Filter by category
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <h3>Categories</h3>
+      <ul>
+        <li><button class="category-btn active" data-category="all">All</button></li>
+        <li><button class="category-btn" data-category="joggers">Joggers</button></li>
+        <li><button class="category-btn" data-category="tank-tops">Tank Tops</button></li>
+        <li><button class="category-btn" data-category="polo">Polo</button></li>
+        <li><button class="category-btn" data-category="long-sleeves">Long Sleeves</button></li>
+        <li><button class="category-btn" data-category="tees">Tees</button></li>
+      </ul>
+    </aside>
+
+    <div class="product-grid-shop">
+
+      <div class="product-card" data-category="joggers">
+        <div class="product-badge">Bestseller</div>
+        <div class="product-image">
+          <img src="pinkjogA.JPG" alt="Classic Jogger front" class="front">
+          <img src="pinkjogB.JPG" alt="Classic Jogger back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Flame Sweats</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="joggers">
+        <div class="product-badge new">New</div>
+        <div class="product-image">
+          <img src="jogwhiteB.JPG" alt="Training Tank front" class="front">
+          <img src="jogwhiteA.JPG" alt="Training Tank back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Flame Sweats</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+         <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+
+      <div class="product-card" data-category="joggers">
+        <div class="product-badge new">New</div>
+        <div class="product-image">
+          <img src="jogB.JPG" alt="UNRLD Joggers front" class="front">
+          <img src="jogA.JPG" alt="UNRLD Joggers back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Flame Sweats</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="polo">
+        <div class="product-image">
+          <img src="poloA.JPG" alt="UNRLD Polo front" class="front">
+          <img src="poloB.JPG" alt="UNRLD Polo back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Polo</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="long-sleeves">
+        <div class="product-image">
+          <img src="longsleeveA.JPG" alt="Long Sleeve front" class="front">
+          <img src="longsleeveB.JPG" alt="Long Sleeve back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD LongSleeve</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="long-sleeves">
+        <div class="product-image">
+          <img src="longsleevewhite.JPG" alt="Long Sleeve front" class="front">
+          <img src="longsleevewhiteB.JPG" alt="Long Sleeve back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD LongSleeve</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+
+      <div class="product-card" data-category="polo">
+        <div class="product-image">
+          <img src="poloblackA.JPG" alt="Everyday Polo front" class="front">
+          <img src="poloblackB.JPG" alt="Everyday Polo back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Polo</h3>
+        <p class="price">₦25000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="Hatersback.png" alt="UNRLD Tee" class="front">
+          <img src="hatersFront.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>HMMF Tee</h3>
+        <p class="price">₦18000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+<div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="WTTA.png" alt="UNRLD Tee" class="front">
+          <img src="WTTB.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>FWTT Tee</h3>
+        <p class="price">₦18000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tank-tops">
+        <div class="product-image">
+          <img src="sleeveblackA.JPG" alt="UNRLD Tank front" class="front">
+          <img src="sleeveblackB.JPG" alt="UNRLD Tank back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Tank Top</h3>
+        <p class="price">₦16000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tank-tops">
+        <div class="product-image">
+          <img src="sleevewhiteA.JPG" alt="UNRLD Tank front" class="front">
+          <img src="sleevewhiteB.JPG" alt="UNRLD Tank back" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Tank Top</h3>
+        <p class="price">₦16000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="Teefront.png" alt="UNRLD Tee" class="front">
+          <img src="Teeback.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>Art is Freedom Tee</h3>
+        <p class="price">₦20000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="TeewhiteA.png" alt="UNRLD Tee" class="front">
+          <img src="TeewhiteB.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>Art Is Freedom Tee</h3>
+        <p class="price">₦20000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="unruA.png" alt="UNRLD Tee" class="front">
+          <img src="unruB.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Tee</h3>
+        <p class="price">₦18000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+      <div class="product-card" data-category="tees">
+        <div class="product-image">
+          <img src="whiteA.png" alt="UNRLD Tee" class="front">
+          <img src="WhiteB.png" alt="UNRLD Tee" class="back">
+          <div class="overlay">
+            <button class="quick-view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Quick View
+            </button>
+          </div>
+        </div>
+        <h3>UNRLD Tee</h3>
+        <p class="price">₦18000</p>
+        <div class="sizes">
+          <button class="size">S</button>
+          <button class="size">M</button>
+          <button class="size">L</button>
+          <button class="size">XL</button>
+          <button class="size">XXL</button>
+          <button class="size">XXXL</button>
+        </div>
+        <button class="add-to-cart">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M9 10a3 3 0 0 0 6 0"/></svg>
+          Add to Bag
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Account slide-in panel -->
+  <div class="account-overlay" id="accountOverlay"></div>
+  <div class="account-panel" id="accountPanel">
+    <div class="account-panel-head">
+      <span class="eyebrow">My Account</span>
+      <button class="panel-close" id="accountClose" aria-label="Close account panel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="account-panel-body">
+      <div id="loginView">
+        <h3>Welcome back</h3>
+        <p class="account-sub">Sign in to track orders, save favorites, and check out faster.</p>
+        <form class="account-form" id="loginForm">
+          <label class="field"><span>Email</span><input type="email" name="email" placeholder="you@example.com" required></label>
+          <label class="field"><span>Password</span><input type="password" name="password" placeholder="••••••••" required></label>
+          <button type="submit" class="btn btn-solid account-submit">Log in</button>
+        </form>
+        <div class="account-divider"><span>or</span></div>
+        <button class="btn btn-outline account-submit" id="showSignup">Create an account</button>
+      </div>
+      <div id="signupView" style="display:none;">
+        <h3>Create account</h3>
+        <p class="account-sub">Join to save your details and track every order.</p>
+        <form class="account-form" id="signupForm">
+          <label class="field"><span>Full name</span><input type="text" name="name" placeholder="Jane Doe" required></label>
+          <label class="field"><span>Email</span><input type="email" name="email" placeholder="you@example.com" required></label>
+          <label class="field"><span>Password</span><input type="password" name="password" placeholder="••••••••" required></label>
+          <label class="field"><span>Confirm password</span><input type="password" name="confirm" placeholder="••••••••" required></label>
+          <button type="submit" class="btn btn-solid account-submit">Sign up</button>
+        </form>
+        <div class="account-divider"><span>or</span></div>
+        <button class="btn btn-outline account-submit" id="showLogin">Back to login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGGED IN VIEW -->
+  <div id="loggedInView" style="display:none;">
+    <h3>Welcome, <span id="accountUserName"></span></h3>
+    <p class="account-sub">You're logged in. Manage your account below.</p>
+    <button class="btn btn-outline account-submit" id="logoutBtn">Log out</button>
+  </div>
+
+</div>
+  <!-- Cart slide-in panel -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="account-panel-head">
+      <span class="eyebrow">Your Cart</span>
+      <button class="panel-close" id="cartClose" aria-label="Close cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="cart-panel-body" id="cartItems"></div>
+    <div class="cart-panel-footer">
+      <div class="cart-subtotal-row"><span>Subtotal</span><span id="cartSubtotal">$0</span></div>
+      <button class="btn btn-solid account-submit" id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown search -->
+  <div class="mobile-search-backdrop" id="mobileSearchBackdrop"></div>
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="mobile-search-row">
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Search...">
+      <button class="panel-close mobile-search-close" id="mobileSearchClose" aria-label="Close search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick View modal -->
+  <div class="quickview-overlay" id="quickviewOverlay"></div>
+  <div class="quickview-modal" id="quickviewModal">
+    <div class="quickview-image">
+      <img id="quickviewImg" src="" alt="">
+    </div>
+    <div class="quickview-body">
+      <button class="panel-close quickview-close" id="quickviewClose" aria-label="Close quick view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h3 id="quickviewName"></h3>
+      <p class="price" id="quickviewPrice"></p>
+      <div class="sizes" id="quickviewSizes"></div>
+      <button class="add-to-cart" id="quickviewAdd">Add to Bag</button>
+    </div>
+  </div>
+
+<script src="common.js"></script>
+<script src="shop.js"></script>
+</body>
+</html>
