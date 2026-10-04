@@ -1,6 +1,7 @@
 // ============================================================
 // UNRLDSZN Backend Server
 // Handles: user signup/login, and serving your website files.
+// Database: PostgreSQL (persistent — data survives redeploys/restarts)
 // ============================================================
 
 require('dotenv').config();
@@ -10,36 +11,46 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const { DatabaseSync } = require('node:sqlite'); // built into Node — no install/compiling needed
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Secret key used to sign login tokens. In production this MUST be
-// set as a real environment variable (see .env.example) — never
-// hardcode a real secret and commit it anywhere public.
+// set as a real environment variable — never hardcode a real secret.
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-change-this';
 
 // ------------------------------------------------------------
 // Database setup
 // ------------------------------------------------------------
-// This creates (or opens, if it already exists) a file called
-// "database.sqlite" sitting right next to this server file.
-// That one file IS your entire database — no separate database
-// server to install or manage.
-const db = new DatabaseSync(path.join(__dirname, 'database.sqlite'));
+// DATABASE_URL is provided automatically by Render once you attach
+// a PostgreSQL database to this service. Locally, set it in your
+// .env file (see .env.example) pointing at a local Postgres instance.
+//
+// Render's Postgres requires SSL, but rejects the default strict
+// certificate check on the free tier — this config handles both
+// local (no SSL) and Render (SSL, relaxed cert check) automatically.
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render.com')
+    ? { rejectUnauthorized: false }
+    : false
+});
 
 // Create the "users" table the first time the server ever runs.
-// If it already exists, this line does nothing (safe to re-run).
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+// If it already exists, this does nothing (safe to re-run).
+async function initDb(){
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  console.log('Database ready (users table exists)');
+}
 
 // ------------------------------------------------------------
 // Middleware (things that run on every request before your routes)
@@ -64,7 +75,7 @@ function getUserFromRequest(req){
 // ------------------------------------------------------------
 // POST /api/signup — create a new account
 // ------------------------------------------------------------
-app.post('/api/signup', (req, res) => {
+app.post('/api/signup', async (req, res) => {
   const { name, email, password } = req.body;
 
   // Basic validation
@@ -75,69 +86,86 @@ app.post('/api/signup', (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters.' });
   }
 
-  // Check if this email is already registered
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
-  if (existing){
-    return res.status(409).json({ error: 'An account with this email already exists.' });
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    // Check if this email is already registered
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
+    if (existing.rows.length > 0){
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+
+    // Hash the password before storing it — never store plain text passwords.
+    const passwordHash = bcrypt.hashSync(password, 10);
+
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
+      [name, normalizedEmail, passwordHash]
+    );
+    const newUserId = result.rows[0].id;
+
+    // Log them in immediately after signing up
+    const token = jwt.sign(
+      { id: newUserId, name, email: normalizedEmail },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,           // JavaScript on the page can't read this cookie — safer against attacks
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.json({ success: true, user: { name, email: normalizedEmail } });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
-
-  // Hash the password before storing it — this is the critical security step.
-  // "10" is the hashing cost (higher = slower but more secure; 10 is a solid default).
-  const passwordHash = bcrypt.hashSync(password, 10);
-
-  const result = db.prepare(
-    'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)'
-  ).run(name, email.toLowerCase(), passwordHash);
-
-  // Log them in immediately after signing up
-  const token = jwt.sign(
-    { id: result.lastInsertRowid, name, email: email.toLowerCase() },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  res.cookie('token', token, {
-    httpOnly: true,           // JavaScript on the page can't read this cookie — safer against attacks
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  });
-
-  res.json({ success: true, user: { name, email: email.toLowerCase() } });
 });
 
 // ------------------------------------------------------------
 // POST /api/login — check email/password, log them in
 // ------------------------------------------------------------
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password){
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase());
-  if (!user){
-    return res.status(401).json({ error: 'Incorrect email or password.' });
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
+    const user = result.rows[0];
+
+    if (!user){
+      return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+
+    const passwordMatches = bcrypt.compareSync(password, user.password_hash);
+    if (!passwordMatches){
+      return res.status(401).json({ error: 'Incorrect email or password.' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({ success: true, user: { name: user.name, email: user.email } });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
-
-  const passwordMatches = bcrypt.compareSync(password, user.password_hash);
-  if (!passwordMatches){
-    return res.status(401).json({ error: 'Incorrect email or password.' });
-  }
-
-  const token = jwt.sign(
-    { id: user.id, name: user.name, email: user.email },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  res.cookie('token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
-
-  res.json({ success: true, user: { name: user.name, email: user.email } });
 });
 
 // ------------------------------------------------------------
@@ -162,6 +190,13 @@ app.get('/api/me', (req, res) => {
 // ------------------------------------------------------------
 // Start the server
 // ------------------------------------------------------------
-app.listen(PORT, () => {
-  console.log(`UNRLDSZN server running at http://localhost:${PORT}`);
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`UNRLDSZN server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to the database:', err);
+    process.exit(1);
+  });
