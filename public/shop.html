@@ -508,7 +508,7 @@
     </div>
   </section>
 
-  <!-- Account slide-in panel -->
+    <!-- Account slide-in panel -->
   <div class="account-overlay" id="accountOverlay"></div>
   <div class="account-panel" id="accountPanel">
     <div class="account-panel-head">
@@ -531,6 +531,7 @@
         <div class="account-divider"><span>or</span></div>
         <button class="btn btn-outline account-submit" id="showSignup">Create an account</button>
       </div>
+
       <div id="signupView" style="display:none;">
         <h3>Create account</h3>
         <p class="account-sub">Join to save your details and track every order.</p>
@@ -544,16 +545,14 @@
         <div class="account-divider"><span>or</span></div>
         <button class="btn btn-outline account-submit" id="showLogin">Back to login</button>
       </div>
+
+      <div id="loggedInView" style="display:none;">
+        <h3>Welcome, <span id="accountUserName"></span></h3>
+        <p class="account-sub">You're logged in. Manage your account below.</p>
+        <button class="btn btn-outline account-submit" id="logoutBtn">Log out</button>
+      </div>
     </div>
   </div>
-
-  <!-- LOGGED IN VIEW -->
-  <div id="loggedInView" style="display:none;">
-    <h3>Welcome, <span id="accountUserName"></span></h3>
-    <p class="account-sub">You're logged in. Manage your account below.</p>
-    <button class="btn btn-outline account-submit" id="logoutBtn">Log out</button>
-  </div>
-
 </div>
   <!-- Cart slide-in panel -->
   <div class="cart-overlay" id="cartOverlay"></div>
@@ -568,7 +567,7 @@
     </div>
     <div class="cart-panel-body" id="cartItems"></div>
     <div class="cart-panel-footer">
-      <div class="cart-subtotal-row"><span>Subtotal</span><span id="cartSubtotal">$0</span></div>
+      <div class="cart-subtotal-row"><span>Subtotal</span><span id="cartSubtotal">₦0</span></div>
       <button class="btn btn-solid account-submit" id="checkoutBtn">Checkout</button>
     </div>
   </div>
