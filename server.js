@@ -49,7 +49,14 @@ async function initDb(){
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
-  console.log('Database ready (users table exists)');
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  console.log('Database ready (users + newsletter tables exist)');
 }
 
 // ------------------------------------------------------------
@@ -185,6 +192,31 @@ app.get('/api/me', (req, res) => {
     return res.status(401).json({ loggedIn: false });
   }
   res.json({ loggedIn: true, user: { name: user.name, email: user.email } });
+});
+
+// ------------------------------------------------------------
+// POST /api/newsletter — save an email to the mailing list
+// ------------------------------------------------------------
+app.post('/api/newsletter', async (req, res) => {
+  const email = (req.body.email || '').trim().toLowerCase();
+
+  // Simple email format check
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  try {
+    // ON CONFLICT DO NOTHING: if the email is already subscribed, we just
+    // succeed quietly instead of showing an error.
+    await pool.query(
+      'INSERT INTO newsletter_subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING',
+      [email]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Newsletter error:', err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
 });
 
 // ------------------------------------------------------------

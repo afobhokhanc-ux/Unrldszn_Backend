@@ -422,10 +422,45 @@ if (newsletterOverlay){
     if (e.key === 'Escape') closeNewsletter();
   });
 
-  newsletterForm.addEventListener('submit', (e) => {
+    newsletterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    console.log('Newsletter signup submitted (placeholder — no backend yet)');
-    closeNewsletter();
+    const email = newsletterForm.elements['newsletter-email'].value;
+    const submitBtn = newsletterForm.querySelector('button[type="submit"]');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Subscribing...';
+
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (!res.ok){
+        submitBtn.textContent = data.error || 'Please try again';
+        setTimeout(() => {
+          submitBtn.textContent = 'Subscribe';
+          submitBtn.disabled = false;
+        }, 2000);
+        return;
+      }
+
+      submitBtn.textContent = "You're in! Thank you.";
+      newsletterForm.reset();
+      setTimeout(() => {
+        closeNewsletter();
+        submitBtn.textContent = 'Subscribe';
+        submitBtn.disabled = false;
+      }, 1500);
+    } catch (err) {
+      submitBtn.textContent = 'Something went wrong';
+      setTimeout(() => {
+        submitBtn.textContent = 'Subscribe';
+        submitBtn.disabled = false;
+      }, 2000);
+    }
   });
 }
   const loggedInView = document.getElementById('loggedInView');
