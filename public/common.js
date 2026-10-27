@@ -1,7 +1,11 @@
 // ==============================
-// Shared cart state (persists across pages)
+// Shared cart state
+// - Guests: cart lives in this browser (localStorage)
+// - Logged-in users: cart is ALSO saved to the database, so it follows them to any device
 // ==============================
 const CART_KEY = 'unrldszn_cart';
+let isLoggedIn = false;
+let cartPushTimer = null;
 
 function loadCart(){
   try {
@@ -11,11 +15,78 @@ function loadCart(){
     return [];
   }
 }
+
+// Saves locally, and (if logged in) to the server a moment later.
+// The short delay bundles rapid clicks (like pressing + several times) into one save.
 function saveCart(){
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  if (!isLoggedIn) return;
+  clearTimeout(cartPushTimer);
+  cartPushTimer = setTimeout(() => {
+    fetch('/api/cart', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart })
+    }).catch(() => {});
+  }, 400);
 }
 
 let cart = loadCart();
+
+// Combine two carts. If the same item is in both, keep the larger quantity
+// (so merging identical carts never doubles anything).
+function mergeCarts(a, b){
+  const merged = a.map(item => ({ ...item }));
+  b.forEach(item => {
+    const existing = merged.find(m => m.name === item.name);
+    if (existing){
+      existing.qty = Math.max(existing.qty, item.qty);
+    } else {
+      merged.push({ ...item });
+    }
+  });
+  return merged;
+}
+
+async function fetchServerCart(){
+  try {
+    const res = await fetch('/api/cart');
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.items) ? data.items : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Just logged in or signed up: merge this browser's guest cart into the saved account cart
+async function onLogin(){
+  isLoggedIn = true;
+  const serverItems = await fetchServerCart();
+  if (serverItems === null) return;   // couldn't reach the server, keep the local cart
+  cart = mergeCarts(serverItems, cart);
+  saveCart();
+  renderCart();
+}
+
+// Page loaded and the person is already logged in: the saved cart is the source of truth
+async function onSessionRestored(){
+  isLoggedIn = true;
+  const serverItems = await fetchServerCart();
+  if (serverItems === null) return;
+  cart = serverItems;
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  renderCart();
+}
+
+// Logged out: clear the cart from this device (the saved copy stays safe on their account)
+function onLogout(){
+  isLoggedIn = false;
+  clearTimeout(cartPushTimer);
+  cart = [];
+  localStorage.removeItem(CART_KEY);
+  renderCart();
+}
 
 // ==============================
 // Search bar (desktop expand + mobile dropdown)
@@ -84,14 +155,10 @@ if (searchBtn){
 
     const cards = document.querySelectorAll('.product-card');
     if (cards.length){
-      let anyVisible = false;
       cards.forEach(card => {
         const name = (card.querySelector('h3, .name')?.textContent || '').toLowerCase();
-        const match = name.includes(q);
-        card.style.display = match ? '' : 'none';
-        if (match) anyVisible = true;
+        card.style.display = name.includes(q) ? '' : 'none';
       });
-      // Clear any active category filter highlight since we're searching instead
       document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
     } else {
       window.location.href = `shop.html?q=${encodeURIComponent(q)}`;
@@ -213,6 +280,7 @@ if (accountBtn){
       closeAccountPanel();
       updateAccountUI(data.user);
       form.reset();
+      onLogin();
     } catch (err) {
       showAccountError('Something went wrong. Please try again.');
     }
@@ -247,6 +315,7 @@ if (accountBtn){
       closeAccountPanel();
       updateAccountUI(data.user);
       form.reset();
+      onLogin();
     } catch (err) {
       showAccountError('Something went wrong. Please try again.');
     }
@@ -259,6 +328,7 @@ if (accountBtn){
       // even if the request fails, still reset the UI locally
     }
     resetAccountUI();
+    onLogout();
     closeAccountPanel();
   });
 
@@ -268,6 +338,7 @@ if (accountBtn){
     .then(data => {
       if (data.loggedIn){
         updateAccountUI(data.user);
+        onSessionRestored();
       }
     })
     .catch(() => {});
@@ -337,7 +408,7 @@ function renderCart(){
     return;
   }
 
-    cartItemsEl.innerHTML = cart.map((item, index) => `
+  cartItemsEl.innerHTML = cart.map((item, index) => `
     <div class="cart-item">
       ${item.image
         ? `<img src="${item.image}" alt="${item.name}" class="cart-item-photo">`
@@ -422,7 +493,7 @@ if (newsletterOverlay){
     if (e.key === 'Escape') closeNewsletter();
   });
 
-    newsletterForm.addEventListener('submit', async (e) => {
+  newsletterForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = newsletterForm.elements['newsletter-email'].value;
     const submitBtn = newsletterForm.querySelector('button[type="submit"]');
@@ -463,29 +534,30 @@ if (newsletterOverlay){
     }
   });
 }
-  const loggedInView = document.getElementById('loggedInView');
-  const accountUserName = document.getElementById('accountUserName');
-  const logoutBtn = document.getElementById('logoutBtn');
 
-  function updateAccountUI(user){
-    loginView.style.display = 'none';
-    signupView.style.display = 'none';
-    loggedInView.style.display = 'block';
-    accountUserName.textContent = user.name;
+// ==============================
+// Mobile nav menu (hamburger)
+// ==============================
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+if (hamburgerBtn){
+  const mobileNavPanel = document.getElementById('mobileNavPanel');
+  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+  const mobileNavClose = document.getElementById('mobileNavClose');
+
+  function openMobileNav(){
+    mobileNavPanel.classList.add('active');
+    mobileNavOverlay.classList.add('active');
+  }
+  function closeMobileNav(){
+    mobileNavPanel.classList.remove('active');
+    mobileNavOverlay.classList.remove('active');
   }
 
-  function resetAccountUI(){
-    loggedInView.style.display = 'none';
-    signupView.style.display = 'none';
-    loginView.style.display = 'block';
-  }
+  hamburgerBtn.addEventListener('click', openMobileNav);
+  mobileNavClose.addEventListener('click', closeMobileNav);
+  mobileNavOverlay.addEventListener('click', closeMobileNav);
 
-  logoutBtn.addEventListener('click', async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch (err) {
-      // even if the request fails, still reset the UI locally
-    }
-    resetAccountUI();
-    closeAccountPanel();
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobileNav();
   });
+}

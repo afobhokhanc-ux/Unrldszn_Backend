@@ -56,7 +56,16 @@ async function initDb(){
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
-  console.log('Database ready (users + newsletter tables exist)');
+  // One row per user. "items" holds their whole cart as JSON, for example:
+  // [{ "name": "UNRLD Polo (M)", "price": 25000, "qty": 2, "image": "poloA.JPG" }]
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS carts (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      items JSONB NOT NULL DEFAULT '[]',
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  console.log('Database ready (users, newsletter, carts tables exist)');
 }
 
 // ------------------------------------------------------------
@@ -216,6 +225,64 @@ app.post('/api/newsletter', async (req, res) => {
   } catch (err) {
     console.error('Newsletter error:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+});
+
+// ------------------------------------------------------------
+// Cart endpoints (logged-in users only)
+// ------------------------------------------------------------
+function requireUser(req, res, next){
+  const user = getUserFromRequest(req);
+  if (!user){
+    return res.status(401).json({ error: 'Please log in first.' });
+  }
+  req.user = user;
+  next();
+}
+
+// Clean up whatever the browser sends so we never store junk
+function sanitizeCartItems(items){
+  if (!Array.isArray(items) || items.length > 50) return null;
+  const clean = [];
+  for (const item of items){
+    if (!item || typeof item.name !== 'string' || item.name.length === 0 || item.name.length > 200) return null;
+    const price = Number(item.price);
+    const qty = Number(item.qty);
+    if (!Number.isFinite(price) || price < 0) return null;
+    if (!Number.isInteger(qty) || qty < 1 || qty > 99) return null;
+    const image = typeof item.image === 'string' ? item.image.slice(0, 500) : '';
+    clean.push({ name: item.name, price, qty, image });
+  }
+  return clean;
+}
+
+// GET /api/cart — fetch the saved cart
+app.get('/api/cart', requireUser, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT items FROM carts WHERE user_id = $1', [req.user.id]);
+    res.json({ items: result.rows.length ? result.rows[0].items : [] });
+  } catch (err) {
+    console.error('Cart load error:', err);
+    res.status(500).json({ error: 'Could not load your cart.' });
+  }
+});
+
+// PUT /api/cart — replace the saved cart with the one sent
+app.put('/api/cart', requireUser, async (req, res) => {
+  const items = sanitizeCartItems(req.body.items);
+  if (items === null){
+    return res.status(400).json({ error: 'Invalid cart data.' });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO carts (user_id, items, updated_at) VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET items = $2, updated_at = NOW()`,
+      [req.user.id, JSON.stringify(items)]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Cart save error:', err);
+    res.status(500).json({ error: 'Could not save your cart.' });
   }
 });
 
