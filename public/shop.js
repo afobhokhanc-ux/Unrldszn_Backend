@@ -163,19 +163,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeQuickView();
 });
 
-// ==============================
-// Mobile nav menu (hamburger)
-// ==============================
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-if (hamburgerBtn){
-  const mobileNavPanel = document.getElementById('mobileNavPanel');
-  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-  const mobileNavClose = document.getElementById('mobileNavClose');
 
-  function openMobileNav(){
-    mobileNavPanel.classList.add('active');
-    mobileNavOverlay.classList.add('active');
-  }
   function closeMobileNav(){
     mobileNavPanel.classList.remove('active');
     mobileNavOverlay.classList.remove('active');
@@ -188,4 +176,3 @@ if (hamburgerBtn){
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeMobileNav();
   });
-}

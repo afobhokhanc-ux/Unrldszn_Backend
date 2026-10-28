@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — UNRLDSZN</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="unrlszn.css" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <nav class="nav">
+      <div class="nav-links"></div>
+      <a href="index.html" class="wordmark logo-link" aria-label="UNRLDSZN home">
+        <img src="logo.png" alt="UNRLDSZN" class="logo-img">
+      </a>
+      <div class="nav-right">
+        <a href="shop.html" class="checkout-back">← Back to shop</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="checkout-page">
+    <span class="eyebrow">Secure checkout</span>
+    <h1>Checkout</h1>
+
+    <p class="checkout-message" id="checkoutLoading">Loading your order...</p>
+
+    <!-- Shown when the person isn't logged in -->
+    <div class="checkout-notice" id="checkoutLoginNotice" style="display:none;">
+      <h3>Please log in first</h3>
+      <p>Log in or create an account so we can save your order.</p>
+      <a href="index.html" class="btn btn-solid">Go to the homepage to log in</a>
+    </div>
+
+    <!-- Shown when the cart is empty -->
+    <div class="checkout-notice" id="checkoutEmptyNotice" style="display:none;">
+      <h3>Your cart is empty</h3>
+      <p>Add something you like, then come back to check out.</p>
+      <a href="shop.html" class="btn btn-solid">Shop now</a>
+    </div>
+
+    <div class="checkout-grid" id="checkoutGrid" style="display:none;">
+
+      <form class="checkout-form account-form" id="checkoutForm" novalidate>
+        <h3>Delivery details</h3>
+
+        <label class="field">
+          <span>Full name</span>
+          <input type="text" name="fullName" autocomplete="name" required>
+        </label>
+        <label class="field">
+          <span>Phone number</span>
+          <input type="tel" name="phone" autocomplete="tel" placeholder="08012345678" required>
+        </label>
+        <label class="field">
+          <span>Delivery address</span>
+          <input type="text" name="address" autocomplete="street-address" required>
+        </label>
+        <div class="checkout-row">
+          <label class="field">
+            <span>City</span>
+            <input type="text" name="city" autocomplete="address-level2" required>
+          </label>
+          <label class="field">
+            <span>State</span>
+            <input type="text" name="state" autocomplete="address-level1" required>
+          </label>
+        </div>
+
+        <p class="checkout-error" id="checkoutError" role="alert"></p>
+
+        <button type="submit" class="btn btn-solid account-submit" id="payBtn">Pay with Paystack</button>
+        <p class="checkout-secure">You'll be taken to Paystack to pay securely by card, bank transfer, or USSD. We never see your card details.</p>
+      </form>
+
+      <aside class="checkout-summary">
+        <h3>Your order</h3>
+        <div id="summaryLines"></div>
+        <div class="summary-totals">
+          <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal"></span></div>
+          <div class="summary-row"><span>Delivery</span><span id="summaryShipping"></span></div>
+          <div class="summary-row summary-total"><span>Total</span><span id="summaryTotal"></span></div>
+        </div>
+        <div class="checkout-problems" id="summaryProblems" style="display:none;"></div>
+      </aside>
+
+    </div>
+  </main>
+
+<script src="common.js"></script>
+<script src="checkout.js"></script>
+</body>
+</html>

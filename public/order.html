@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your order — UNRLDSZN</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="unrlszn.css" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <nav class="nav">
+      <div class="nav-links"></div>
+      <a href="index.html" class="wordmark logo-link" aria-label="UNRLDSZN home">
+        <img src="logo.png" alt="UNRLDSZN" class="logo-img">
+      </a>
+      <div class="nav-right">
+        <a href="shop.html" class="checkout-back">Continue shopping</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="checkout-page order-page">
+    <p class="checkout-message" id="orderLoading">Checking your order...</p>
+    <div id="orderResult"></div>
+  </main>
+
+<script src="common.js"></script>
+<script src="order.js"></script>
+</body>
+</html>

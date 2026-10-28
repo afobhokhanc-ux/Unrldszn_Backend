@@ -11,7 +11,9 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
 const { Pool } = require('pg');
+const { priceCart } = require('./products');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +21,17 @@ const PORT = process.env.PORT || 3000;
 // Secret key used to sign login tokens. In production this MUST be
 // set as a real environment variable — never hardcode a real secret.
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-change-this';
+
+// ---- Paystack settings (all come from environment variables) ----
+// PAYSTACK_SECRET_KEY : your secret key (sk_test_... while testing, sk_live_... later)
+// SITE_URL            : your site's address, e.g. https://unrldszn.onrender.com
+// SHIPPING_FEE        : delivery fee in naira (defaults to 0 = free delivery)
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_BASE = process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co';
+const SHIPPING_FEE = Number(process.env.SHIPPING_FEE || 0);
+
+// Render sits behind a proxy; this lets Express know the real address/protocol
+app.set('trust proxy', 1);
 
 // ------------------------------------------------------------
 // Database setup
@@ -65,13 +78,31 @@ async function initDb(){
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `);
-  console.log('Database ready (users, newsletter, carts tables exist)');
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      reference TEXT NOT NULL UNIQUE,
+      user_id INTEGER REFERENCES users(id),
+      email TEXT NOT NULL,
+      items JSONB NOT NULL,
+      subtotal INTEGER NOT NULL,
+      shipping INTEGER NOT NULL,
+      total INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      delivery JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      paid_at TIMESTAMP
+    )
+  `);
+  console.log('Database ready (users, newsletter, carts, orders tables exist)');
 }
 
 // ------------------------------------------------------------
 // Middleware (things that run on every request before your routes)
 // ------------------------------------------------------------
-app.use(express.json());       // lets us read JSON sent from the frontend (req.body)
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; }   // raw copy, needed to verify Paystack webhooks
+}));
 app.use(cookieParser());       // lets us read/set cookies (used to keep someone logged in)
 app.use(express.static(path.join(__dirname, 'public'))); // serves index.html, shop.html, css, js, images
 
@@ -283,6 +314,202 @@ app.put('/api/cart', requireUser, async (req, res) => {
   } catch (err) {
     console.error('Cart save error:', err);
     res.status(500).json({ error: 'Could not save your cart.' });
+  }
+});
+
+// ------------------------------------------------------------
+// Checkout & Paystack payments
+// ------------------------------------------------------------
+async function paystackRequest(method, apiPath, body){
+  const res = await fetch(PAYSTACK_BASE + apiPath, {
+    method,
+    headers: {
+      Authorization: `Bearer ${PAYSTACK_SECRET}`,
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json.status === false){
+    throw new Error(json.message || 'Paystack request failed');
+  }
+  return json;
+}
+
+function siteUrl(req){
+  return process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+async function loadSavedCart(userId){
+  const result = await pool.query('SELECT items FROM carts WHERE user_id = $1', [userId]);
+  return result.rows.length ? result.rows[0].items : [];
+}
+
+// Asks Paystack whether this payment really succeeded, and only then marks the
+// order paid. Safe to call many times (the callback AND the webhook both use it).
+async function confirmPayment(reference){
+  const found = await pool.query('SELECT * FROM orders WHERE reference = $1', [reference]);
+  const order = found.rows[0];
+  if (!order) return { ok: false, reason: 'not_found' };
+  if (order.status === 'paid') return { ok: true, order };
+
+  const verified = await paystackRequest('GET', `/transaction/verify/${encodeURIComponent(reference)}`);
+  const data = verified.data || {};
+
+  // Only trust the payment if status, amount (in kobo) and currency all match our order
+  if (data.status === 'success' && data.amount === order.total * 100 && data.currency === 'NGN'){
+    const updated = await pool.query(
+      "UPDATE orders SET status = 'paid', paid_at = NOW() WHERE reference = $1 AND status <> 'paid' RETURNING *",
+      [reference]
+    );
+    // Order placed, so empty their saved cart
+    await pool.query('DELETE FROM carts WHERE user_id = $1', [order.user_id]);
+    return { ok: true, order: updated.rows[0] || order };
+  }
+
+  if (data.status === 'failed'){
+    await pool.query("UPDATE orders SET status = 'failed' WHERE reference = $1 AND status = 'pending'", [reference]);
+  }
+  return { ok: false, reason: data.status || 'unconfirmed' };
+}
+
+// GET /api/checkout/summary — their saved cart, priced by the SERVER
+app.get('/api/checkout/summary', requireUser, async (req, res) => {
+  try {
+    const items = await loadSavedCart(req.user.id);
+    res.json(priceCart(items, SHIPPING_FEE));
+  } catch (err) {
+    console.error('Checkout summary error:', err);
+    res.status(500).json({ error: 'Could not load your order.' });
+  }
+});
+
+// POST /api/checkout — create the order and get a Paystack payment link
+app.post('/api/checkout', requireUser, async (req, res) => {
+  if (!PAYSTACK_SECRET){
+    return res.status(503).json({ error: 'Payments are not set up yet.' });
+  }
+
+  // Check the delivery details
+  const d = req.body.delivery || {};
+  const delivery = {
+    fullName: String(d.fullName || '').trim(),
+    phone: String(d.phone || '').trim(),
+    address: String(d.address || '').trim(),
+    city: String(d.city || '').trim(),
+    state: String(d.state || '').trim()
+  };
+  if (delivery.fullName.length < 2 || delivery.fullName.length > 100)
+    return res.status(400).json({ error: 'Please enter your full name.' });
+  if (!/^[0-9+()\-\s]{7,20}$/.test(delivery.phone))
+    return res.status(400).json({ error: 'Please enter a valid phone number.' });
+  if (delivery.address.length < 5 || delivery.address.length > 300)
+    return res.status(400).json({ error: 'Please enter your delivery address.' });
+  if (delivery.city.length < 2 || delivery.city.length > 100)
+    return res.status(400).json({ error: 'Please enter your city.' });
+  if (delivery.state.length < 2 || delivery.state.length > 100)
+    return res.status(400).json({ error: 'Please enter your state.' });
+
+  try {
+    const items = await loadSavedCart(req.user.id);
+    if (items.length === 0){
+      return res.status(400).json({ error: 'Your cart is empty.' });
+    }
+
+    // Prices come from products.js, never from the browser
+    const priced = priceCart(items, SHIPPING_FEE);
+    if (priced.problems.length > 0){
+      return res.status(400).json({ error: priced.problems[0] });
+    }
+
+    const reference = 'UNR-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
+    await pool.query(
+      `INSERT INTO orders (reference, user_id, email, items, subtotal, shipping, total, delivery)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [reference, req.user.id, req.user.email, JSON.stringify(priced.lines),
+       priced.subtotal, priced.shipping, priced.total, JSON.stringify(delivery)]
+    );
+
+    try {
+      const init = await paystackRequest('POST', '/transaction/initialize', {
+        email: req.user.email,
+        amount: priced.total * 100,          // Paystack wants kobo (₦1 = 100 kobo)
+        currency: 'NGN',
+        reference,
+        callback_url: `${siteUrl(req)}/api/paystack/callback`
+      });
+      res.json({ authorization_url: init.data.authorization_url, reference });
+    } catch (err) {
+      await pool.query("UPDATE orders SET status = 'failed' WHERE reference = $1", [reference]);
+      console.error('Paystack initialize error:', err.message);
+      res.status(502).json({ error: 'Could not start the payment. Please try again.' });
+    }
+  } catch (err) {
+    console.error('Checkout error:', err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+});
+
+// GET /api/paystack/callback — Paystack sends the customer back here after paying
+app.get('/api/paystack/callback', async (req, res) => {
+  const reference = String(req.query.reference || req.query.trxref || '');
+  if (!reference) return res.redirect('/');
+  try {
+    await confirmPayment(reference);
+  } catch (err) {
+    console.error('Callback confirm error:', err.message);
+  }
+  res.redirect('/order.html?ref=' + encodeURIComponent(reference));
+});
+
+// POST /api/paystack/webhook — Paystack tells us directly when a payment succeeds
+// (this covers the case where the customer closes their browser before returning)
+app.post('/api/paystack/webhook', async (req, res) => {
+  if (!PAYSTACK_SECRET || !req.rawBody){
+    return res.sendStatus(400);
+  }
+  const expected = crypto.createHmac('sha512', PAYSTACK_SECRET).update(req.rawBody).digest('hex');
+  const received = String(req.headers['x-paystack-signature'] || '');
+  const valid = expected.length === received.length &&
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+  if (!valid){
+    return res.sendStatus(401);
+  }
+
+  const event = req.body || {};
+  if (event.event === 'charge.success' && event.data && event.data.reference){
+    try {
+      await confirmPayment(event.data.reference);
+    } catch (err) {
+      console.error('Webhook confirm error:', err.message);
+    }
+  }
+  res.sendStatus(200);
+});
+
+// GET /api/orders/:reference — an order's details (only visible to the person who placed it)
+app.get('/api/orders/:reference', requireUser, async (req, res) => {
+  try {
+    const reference = req.params.reference;
+    let found = await pool.query('SELECT * FROM orders WHERE reference = $1 AND user_id = $2', [reference, req.user.id]);
+    if (found.rows.length === 0){
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+    // Still pending? Ask Paystack, so refreshing the page can update the status.
+    if (found.rows[0].status === 'pending'){
+      try { await confirmPayment(reference); } catch (err) { /* keep pending */ }
+      found = await pool.query('SELECT * FROM orders WHERE reference = $1 AND user_id = $2', [reference, req.user.id]);
+    }
+    const o = found.rows[0];
+    res.json({
+      reference: o.reference, status: o.status, items: o.items,
+      subtotal: o.subtotal, shipping: o.shipping, total: o.total,
+      delivery: o.delivery, created_at: o.created_at, paid_at: o.paid_at
+    });
+  } catch (err) {
+    console.error('Order lookup error:', err);
+    res.status(500).json({ error: 'Could not load this order.' });
   }
 });
 

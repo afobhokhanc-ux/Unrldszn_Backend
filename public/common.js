@@ -33,6 +33,21 @@ function saveCart(){
 
 let cart = loadCart();
 
+// Save the cart to the server RIGHT NOW (used before checkout so nothing is stale)
+async function flushCartToServer(){
+  if (!isLoggedIn) return;
+  clearTimeout(cartPushTimer);
+  try {
+    await fetch('/api/cart', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart })
+    });
+  } catch (err) {
+    // if this fails, checkout will simply show the last saved cart
+  }
+}
+
 // Combine two carts. If the same item is in both, keep the larger quantity
 // (so merging identical carts never doubles anything).
 function mergeCarts(a, b){
@@ -93,6 +108,7 @@ function onLogout(){
 // ==============================
 const searchBtn = document.getElementById('searchBtn');
 if (searchBtn){
+  try {
   const searchWrap = searchBtn.closest('.search-wrap');
   const searchInput = searchWrap.querySelector('.search-input');
 
@@ -127,7 +143,7 @@ if (searchBtn){
   });
 
   if (mobileSearchBackdrop){
-    mobileSearchBackdrop.addEventListener('click', closeMobileSearch);
+    mobileSearchBackdrop?.addEventListener('click', closeMobileSearch);
   }
 
   document.addEventListener('click', (e) => {
@@ -145,7 +161,7 @@ if (searchBtn){
     }
   });
 
-  mobileSearchClose.addEventListener('click', closeMobileSearch);
+  mobileSearchClose?.addEventListener('click', closeMobileSearch);
 
   // Real functional search: runs on Enter, filters product cards if present on the page,
   // otherwise redirects to the shop page with a query string.
@@ -165,13 +181,13 @@ if (searchBtn){
     }
   }
 
-  searchInput.addEventListener('keydown', (e) => {
+  searchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter'){
       runSearch(searchInput.value);
     }
   });
 
-  mobileSearchInput.addEventListener('keydown', (e) => {
+  mobileSearchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter'){
       runSearch(mobileSearchInput.value);
       closeMobileSearch();
@@ -188,6 +204,9 @@ if (searchBtn){
   if (initialQuery){
     document.addEventListener('DOMContentLoaded', () => runSearch(initialQuery));
   }
+  } catch (err) {
+    console.error('[UNRLDSZN] Search failed to start:', err);
+  }
 }
 
 // ==============================
@@ -195,6 +214,7 @@ if (searchBtn){
 // ==============================
 const accountBtn = document.getElementById('accountBtn');
 if (accountBtn){
+  try {
   const accountPanel = document.getElementById('accountPanel');
   const accountOverlay = document.getElementById('accountOverlay');
   const accountClose = document.getElementById('accountClose');
@@ -213,19 +233,19 @@ if (accountBtn){
     accountOverlay.classList.remove('active');
   }
 
-  accountBtn.addEventListener('click', openAccountPanel);
-  accountClose.addEventListener('click', closeAccountPanel);
-  accountOverlay.addEventListener('click', closeAccountPanel);
+  accountBtn?.addEventListener('click', openAccountPanel);
+  accountClose?.addEventListener('click', closeAccountPanel);
+  accountOverlay?.addEventListener('click', closeAccountPanel);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeAccountPanel();
   });
 
-  document.getElementById('showSignup').addEventListener('click', () => {
+  document.getElementById('showSignup')?.addEventListener('click', () => {
     loginView.style.display = 'none';
     signupView.style.display = 'block';
   });
-  document.getElementById('showLogin').addEventListener('click', () => {
+  document.getElementById('showLogin')?.addEventListener('click', () => {
     signupView.style.display = 'none';
     loginView.style.display = 'block';
   });
@@ -245,7 +265,19 @@ if (accountBtn){
     errorEl.textContent = message;
   }
 
+  function clearAccountError(){
+    const errorEl = document.getElementById('accountError');
+    if (errorEl) errorEl.remove();
+  }
+
+  // The cart's Checkout button fires this when someone isn't logged in yet
+  document.addEventListener('need-login', () => {
+    openAccountPanel();
+    showAccountError('Please log in to check out.');
+  });
+
   function updateAccountUI(user){
+    clearAccountError();
     loginView.style.display = 'none';
     signupView.style.display = 'none';
     loggedInView.style.display = 'block';
@@ -253,12 +285,13 @@ if (accountBtn){
   }
 
   function resetAccountUI(){
+    clearAccountError();
     loggedInView.style.display = 'none';
     signupView.style.display = 'none';
     loginView.style.display = 'block';
   }
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
     const email = form.email.value;
@@ -286,7 +319,7 @@ if (accountBtn){
     }
   });
 
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
     const name = form.name.value;
@@ -321,7 +354,7 @@ if (accountBtn){
     }
   });
 
-  logoutBtn.addEventListener('click', async () => {
+  logoutBtn?.addEventListener('click', async () => {
     try {
       await fetch('/api/logout', { method: 'POST' });
     } catch (err) {
@@ -342,6 +375,9 @@ if (accountBtn){
       }
     })
     .catch(() => {});
+  } catch (err) {
+    console.error('[UNRLDSZN] Account panel failed to start:', err);
+  }
 }
 
 // ==============================
@@ -351,6 +387,7 @@ const cartBtnEl = document.querySelector('[aria-label="Cart"]');
 let cartBadge, cartPanel, cartOverlay, cartClose, cartItemsEl, cartSubtotalEl, checkoutBtn;
 
 if (cartBtnEl){
+  try {
   cartBadge = document.querySelector('.cart-count');
   cartPanel = document.getElementById('cartPanel');
   cartOverlay = document.getElementById('cartOverlay');
@@ -368,19 +405,32 @@ if (cartBtnEl){
     cartOverlay.classList.remove('active');
   }
 
-  cartBtnEl.addEventListener('click', openCartPanel);
-  cartClose.addEventListener('click', closeCartPanel);
-  cartOverlay.addEventListener('click', closeCartPanel);
+  cartBtnEl?.addEventListener('click', openCartPanel);
+  cartClose?.addEventListener('click', closeCartPanel);
+  cartOverlay?.addEventListener('click', closeCartPanel);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeCartPanel();
   });
 
-  checkoutBtn.addEventListener('click', () => {
-    console.log('Checkout clicked (placeholder — no backend yet)');
+  checkoutBtn?.addEventListener('click', async () => {
+    if (cart.length === 0) return;
+
+    if (!isLoggedIn){
+      closeCartPanel();
+      document.dispatchEvent(new CustomEvent('need-login'));
+      return;
+    }
+
+    checkoutBtn.disabled = true;
+    await flushCartToServer();
+    window.location.href = 'checkout.html';
   });
 
-  cartItemsEl.addEventListener('click', (e) => {
+  // If someone presses Back from the checkout page, make the button usable again
+  window.addEventListener('pageshow', () => { checkoutBtn.disabled = false; });
+
+  cartItemsEl?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const index = Number(btn.dataset.index);
@@ -396,6 +446,9 @@ if (cartBtnEl){
     saveCart();
     renderCart();
   });
+  } catch (err) {
+    console.error('[UNRLDSZN] Cart panel failed to start:', err);
+  }
 }
 
 function renderCart(){
@@ -403,8 +456,8 @@ function renderCart(){
 
   if (cart.length === 0){
     cartItemsEl.innerHTML = `<p class="cart-empty">Your cart is empty.</p>`;
-    cartSubtotalEl.textContent = '₦0';
-    cartBadge.textContent = '0';
+    if (cartSubtotalEl) cartSubtotalEl.textContent = '₦0';
+    if (cartBadge) cartBadge.textContent = '0';
     return;
   }
 
@@ -427,10 +480,10 @@ function renderCart(){
   `).join('');
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  cartSubtotalEl.textContent = `₦${subtotal.toFixed(0)}`;
+  if (cartSubtotalEl) cartSubtotalEl.textContent = `₦${subtotal.toFixed(0)}`;
 
   const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-  cartBadge.textContent = totalQty;
+  if (cartBadge) cartBadge.textContent = totalQty;
 }
 
 function addToCart(product){
@@ -459,6 +512,7 @@ renderCart();
 // ==============================
 const newsletterOverlay = document.getElementById('newsletterOverlay');
 if (newsletterOverlay){
+  try {
   const newsletterModal = document.getElementById('newsletterModal');
   const newsletterClose = document.getElementById('newsletterClose');
   const newsletterDismiss = document.getElementById('newsletterDismiss');
@@ -485,15 +539,15 @@ if (newsletterOverlay){
     if (scrolled > triggerPoint) openNewsletter();
   }, { passive: true });
 
-  newsletterClose.addEventListener('click', () => closeNewsletter());
-  newsletterDismiss.addEventListener('click', () => closeNewsletter());
-  newsletterOverlay.addEventListener('click', () => closeNewsletter());
+  newsletterClose?.addEventListener('click', () => closeNewsletter());
+  newsletterDismiss?.addEventListener('click', () => closeNewsletter());
+  newsletterOverlay?.addEventListener('click', () => closeNewsletter());
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeNewsletter();
   });
 
-  newsletterForm.addEventListener('submit', async (e) => {
+  newsletterForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = newsletterForm.elements['newsletter-email'].value;
     const submitBtn = newsletterForm.querySelector('button[type="submit"]');
@@ -533,6 +587,9 @@ if (newsletterOverlay){
       }, 2000);
     }
   });
+  } catch (err) {
+    console.error('[UNRLDSZN] Newsletter popup failed to start:', err);
+  }
 }
 
 // ==============================
@@ -540,6 +597,7 @@ if (newsletterOverlay){
 // ==============================
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 if (hamburgerBtn){
+  try {
   const mobileNavPanel = document.getElementById('mobileNavPanel');
   const mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const mobileNavClose = document.getElementById('mobileNavClose');
@@ -553,11 +611,14 @@ if (hamburgerBtn){
     mobileNavOverlay.classList.remove('active');
   }
 
-  hamburgerBtn.addEventListener('click', openMobileNav);
-  mobileNavClose.addEventListener('click', closeMobileNav);
-  mobileNavOverlay.addEventListener('click', closeMobileNav);
+  hamburgerBtn?.addEventListener('click', openMobileNav);
+  mobileNavClose?.addEventListener('click', closeMobileNav);
+  mobileNavOverlay?.addEventListener('click', closeMobileNav);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeMobileNav();
   });
+  } catch (err) {
+    console.error('[UNRLDSZN] Mobile menu failed to start:', err);
+  }
 }
